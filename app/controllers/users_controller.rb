@@ -1,4 +1,12 @@
 class UsersController < ApplicationController
+  before_action :logged_in_user, only: [:index, :edit, :update, :destroy]
+  before_action :correct_user,   only: [:edit, :update]
+  before_action :admin_user,     only: :destroy
+
+  # we use User.all to pull all users out of the database, & assign them to an @users instance variable for use in the view,
+  def index
+      @users = User.paginate(page: params[:page])
+  end
 
   def show
     @user = User.find(params[:id])
@@ -6,6 +14,12 @@ class UsersController < ApplicationController
 
   def new
   	@user = User.new
+  end
+
+  def destroy
+    User.find(params[:id]).destroy
+    flash[:success] = "User deleted"
+    redirect_to users_url
   end
 
   def create
@@ -19,9 +33,49 @@ class UsersController < ApplicationController
   	end
   end
 
+  def edit
+    @user = User.find(params[:id])
+  end
+
+  def update
+    @user = User.find(params[:id])
+  if @user.update_attributes(user_params)
+    flash[:success] = "Profile updated"
+    redirect_to @user
+    #handle a successful update
+  else
+    render 'edit'
+  end
+
+end
+
 private
 
   def user_params
   	params.require(:user).permit(:name, :email, :password, :password_confirmation)
   end
+
+#before filters
+
+#confirms a logged in user. Here we define a 'logged in user' method to require & confirm a user is logged in. "Unless logged in, flash(pop up) 'please log in' and redirect to the login page"
+  def logged_in_user
+    unless logged_in?
+      store_location
+      flash[:danger] = "Please log in."
+      redirect_to login_url
+    end
+  end
+
+# Confirms the correct user. Here we define a 'correct user' method that confirims the correct user is logged in or the page will redirect to the root url, aka the index or home page
+    def correct_user
+      @user = User.find(params[:id])
+      redirect_to(root_url) unless current_user? (@user)
+    end
+
+    # Confirms an admin user.
+    def admin_user
+      redirect_to(root_url) unless current_user.admin?
+    end
+
+
 end

@@ -11,7 +11,7 @@ class SessionsController < ApplicationController
     	# Log the user in and redirect to the user's show page.
     	params[:session][:remember_me] == '1' ? remember(user) : forget(user)
     	#defers the real work to the Sessions helper, where we define a remember method that calls user.remember, thereby generating a remember token and saving its digest to the database. It then uses cookies to create permanent cookies for the user id and remember token
-    	redirect_to user
+    	redirect_back_or user
     	#Rails automatically converts this to the route for the user’s profile page
       
     else
